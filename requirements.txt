@@ -1,0 +1,5 @@
+Adafruit-BluefruitLE==0.9.10
+future==0.17.1
+pyobjc-core==5.1.1
+pyobjc-framework-Cocoa==5.1.1
+pyobjc-framework-CoreBluetooth==5.1.1
