@@ -3,10 +3,14 @@
 # Author: Tony DiCola
 import Adafruit_BluefruitLE
 from Adafruit_BluefruitLE.services import UART
+from MySocket import MySocket
+from time import sleep
 
 
 # Get the BLE provider for the current platform.
 ble = Adafruit_BluefruitLE.get_provider()
+
+DEBUG = True
 
 
 # Main function implements the program logic so it can run in a background
@@ -17,20 +21,32 @@ ble = Adafruit_BluefruitLE.get_provider()
 def main():
     # Clear any cached data because both bluez and CoreBluetooth have issues with
     # caching data and it going stale.
+
+    mysock = MySocket()
+    if DEBUG: print("Connecting ips socket")
+    # mysock.connect()
+    # mysock.mysend()
+
+    # i = 0
+
+    # while True:
+    #     mysock.mysend(str(i))
+    #     i += 1
+
     ble.clear_cached_data()
 
     # Get the first available BLE network adapter and make sure it's powered on.
     adapter = ble.get_default_adapter()
     adapter.power_on()
-    print('Using adapter: {0}'.format(adapter.name))
+    if DEBUG: print('Using adapter: {0}'.format(adapter.name))
 
     # Disconnect any currently connected UART devices.  Good for cleaning up and
     # starting from a fresh state.
-    print('Disconnecting any connected UART devices...')
+    if DEBUG: print('Disconnecting any connected UART devices...')
     UART.disconnect_devices()
 
     # Scan for UART devices.
-    print('Searching for UART device...')
+    if DEBUG: print('Searching for UART device...')
     try:
         adapter.start_scan()
         # Search for the first UART device found (will time out after 60 seconds
@@ -45,12 +61,14 @@ def main():
     device.connect()  # Will time out after 60 seconds, specify timeout_sec parameter
                       # to change the timeout.
 
+    
+
     # Once connected do everything else in a try/finally to make sure the device
     # is disconnected when done.
     try:
         # Wait for service discovery to complete for the UART service.  Will
         # time out after 60 seconds (specify timeout_sec parameter to override).
-        print('Discovering services...')
+        if DEBUG: print('Discovering services...')
         UART.discover(device)
 
         # Once service discovery is complete create an instance of the service
@@ -64,21 +82,24 @@ def main():
             # print("Sent 'Hello world!' to the device.")
 
             # Now wait up to one minute to receive data from the device.
-            print('Waiting up to 60 seconds to receive data from the device...')
+            # print('Waiting up to 60 seconds to receive data from the device...')
             received = uart.read(timeout_sec=60)
             if received is not None:
                 # Received data, print it out.
                 if (received[0] is 'T'):
                     bin_array = map(bin,bytearray(received))
 
-                    print(bin_array)
+                    # print(bin_array)
 
-                    print("Probe 1: " + str(((int(bin_array[1], 2) << 8) + int(bin_array[2], 2)) / 100.0) + "\tProbe 2: " + str(((int(bin_array[3], 2) << 8) + int(bin_array[4], 2)) / 100.0))
-                    # print("")
+                    if DEBUG: print("Probe 1: " + str(((int(bin_array[1], 2) << 8) + int(bin_array[2], 2)) / 100.0) + "\tProbe 2: " + str(((int(bin_array[3], 2) << 8) + int(bin_array[4], 2)) / 100.0))
+                    mysock.mysend(str((int(bin_array[1], 2) << 8) + int(bin_array[2], 2)) + "," + str((int(bin_array[3], 2) << 8) + int(bin_array[4], 2)))
 
             else:
                 # Timeout waiting for data, None is returned.
-                print('Received no data!')
+                if DEBUG: print('Received no data!')
+
+            # sleep(1)
+
     finally:
         # Make sure device is disconnected on exit.
         device.disconnect()
