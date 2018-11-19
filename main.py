@@ -58,6 +58,7 @@ def main():
         # Make sure scanning is stopped before exiting.
         adapter.stop_scan()
 
+    print("Connecting to Device")
     device.connect()  # Will time out after 60 seconds, specify timeout_sec parameter
                       # to change the timeout.
 
